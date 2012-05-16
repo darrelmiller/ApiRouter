@@ -1,0 +1,82 @@
+
+
+GET POST		/gists
+GET 			/gists/public
+GET 			/gists/starred
+GET PATCH DELETE/gists/:id
+GET 			/gists/:gist_id/comments
+PUT 			/gists/:id/star
+POST 			/gists/:id/fork
+
+
+GET 			/issues
+GET 			/events
+GET 			/networks/:user/:repo/events
+
+
+GET PATCH 		/repos/:user/:repo
+GET 			/repos/:user/:repo/labels
+GET 			/repos/:user/:repo/milestones
+GET 			/repos/:user/:repo/contributors
+GET 			/repos/:user/:repo/languages
+GET 			/repos/:user/:repo/teams
+GET 			/repos/:user/:repo/tags
+GET 			/repos/:user/:repo/branches
+GET 			/repos/:user/:repo/events
+GET 			/repos/:user/:repo/watchers
+GET 			/repos/:user/:repo/collaborators
+GET PUT DELETE 	/repos/:user/:repo/collaborators/:user
+GET 			/repos/:user/:repo/downloads
+GET POST DELETE	/repos/:user/:repo/downloads/:id
+GET POST		/repos/:user/:repo/keys
+GET PATCH DELETE/repos/:user/:repo/keys/:id
+GET 			/repos/:user/:repo/commits
+GET 			/repos/:user/:repo/commits/:sha
+GET POST 		/repos/:user/:repo/commits/:sha/comments
+GET 			/repos/:user/:repo/comments
+GET PATCH DELETE/repos/:user/:repo/comments/:id
+GET 			/repos/:user/:repo/compare/:base...:head
+GET POST		/repos/:user/:repo/pulls/:number/comments
+GET PATCH DELETE/repos/:user/:repo/pulls/comments/:number
+GET 			/repos/:user/:repo/issues/:number/comments
+GET 			/repos/:user/:repo/issues/:issue_number/events
+GET 			/repos/:user/:repo/issues/events
+GET POST		/repos/:user/:repo/hooks	
+GET PATCH DELETE/repos/:user/:repo/hooks/:id
+POST 			/repos/:user/:repo/hooks/:id/test
+
+GET POST		/orgs/:org/repos
+GET 			/orgs/:org/events
+GET 			/orgs/:org/members
+GET DELETE 		/orgs/:org/members/:user
+GET 			/orgs/:org/public_members
+GET PUT DELETE 	/orgs/:org/public_members/:user
+
+
+GET 			/users/:user
+GET 			/users/:user/repos
+GET 			/users/:user/gists
+GET 			/users/:user/followers
+GET 			/users/:user/following
+GET 			/users/:user/watched
+GET 			/users/:user/received_events
+GET 			/users/:user/received_events/public
+GET 			/users/:user/events
+GET 			/users/:user/events/public
+GET 			/users/:user/events/orgs/:org
+
+
+
+GET PATCH 		/user
+GET POST 		/user/repos
+GET 			/user/watched
+GET PUT	DELETE	/user/watched/:user/:repo
+GET POST DELETE /user/emails
+GET 			/user/followers
+GET 			/user/following
+GET PUT DELETE 	/user/following/:user
+GET POST 		/user/keys
+GET PATCH DELETE/user/keys/:id
+
+
+
