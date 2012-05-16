@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Http;
+using System.Web.Http.ModelBinding;
 using Tavis;
 
 namespace GitHubApi
@@ -11,70 +12,76 @@ namespace GitHubApi
     public class GitHubApiRouter : ApiRouter
     {
 
-        public GitHubApiRouter() : base("")
+        public GitHubApiRouter(Uri baseUrl)
+            : base("", baseUrl)
         {
-            DispatchTo<RootController>();
 
-            Add(new ApiRouter("issues").DispatchTo<IssuesController>());
-            Add(new ApiRouter("events").DispatchTo<EventsController>());
-            Add(new ApiRouter("networks").Add(new ApiRouter("{userid}").Add(new ApiRouter("{repoid}"))).DispatchTo<NetworksController>());
+            To<RootController>();
 
-            Add(new ApiRouter("gists").DispatchTo<GistsController>()
-                .Add(new ApiRouter("public").DispatchTo<GistsController>(new {gistfilter = "public"}))
-                .Add(new ApiRouter("starred").DispatchTo<GistsController>(new {gistfilter = "starred"}))
-                .Add(new ApiRouter("{gistid}").DispatchTo<GistController>()
-                         .Add(new ApiRouter("comments").DispatchTo<GistCommentsController>())
-                         .Add(new ApiRouter("star").DispatchTo<GistController>(new {action = "Star"}))
-                         .Add(new ApiRouter("fork").DispatchTo<GistController>(new { action = "Fork" }))
+            Add(new ApiRouter("issues").To<IssuesController>());
+            Add(new ApiRouter("events").To<EventsController>());
+            Add(new ApiRouter("networks").Add(new ApiRouter("{userid}").Add(new ApiRouter("{repoid}")))).To<NetworksController>();
+
+            Add(new ApiRouter("gists").To<GistsController>()
+                .Add(new ApiRouter("public").To<GistsController>(new { gistfilter = "public" }))
+                .Add(new ApiRouter("starred").To<GistsController>(new { gistfilter = "starred" }))
+                .Add(new ApiRouter("{gistid}").To<GistController>()
+                         .Add("comments").To<GistCommentsController>()
+                         .Add("star").To<GistController>(new { action = "Star" })
+                         .Add("fork").To<GistController>(new { action = "Fork" })
                 ));
 
-            Add(new ApiRouter("repos").Add(new ApiRouter("{userid}").Add(new ApiRouter("{repoid}")).DispatchTo<RepoController>())
-                .Add(new ApiRouter("labels").DispatchTo<RepoLabelsController>())
-                .Add(new ApiRouter("milestones").DispatchTo<RepoMilestonesController>())
-                .Add(new ApiRouter("contributors").DispatchTo<RepoContributorsController>())
-                .Add(new ApiRouter("languages").DispatchTo<RepoLanguagesController>())
-                .Add(new ApiRouter("teams").DispatchTo<RepoTeamsController>())
-                .Add(new ApiRouter("tags").DispatchTo<RepoTagsController>())
-                .Add(new ApiRouter("branches").DispatchTo<RepoBranchesController>())
-                .Add(new ApiRouter("events").DispatchTo<RepoEventsController>())
-                .Add(new ApiRouter("watchers").DispatchTo<RepoWatchersController>())
-                .Add(new ApiRouter("collaborators").DispatchTo<RepoCollaboratorsController>()
-                        .Add(new ApiRouter("{userid}").DispatchTo<RepoCollaboratorsController>())
+
+            Add(new ApiRouter("repos").Add(new ApiRouter("{userid}").Add(new ApiRouter("{repoid}").To<RepoController>()
+                .Add(new ApiRouter("labels").To<RepoLabelsController>())
+                .Add(new ApiRouter("milestones").To<RepoMilestonesController>())
+                .Add(new ApiRouter("contributors").To<RepoContributorsController>())
+                .Add(new ApiRouter("languages").To<RepoLanguagesController>())
+                .Add(new ApiRouter("teams").To<RepoTeamsController>())
+                .Add(new ApiRouter("tags").To<RepoTagsController>())
+                .Add(new ApiRouter("branches").To<RepoBranchesController>())
+                .Add(new ApiRouter("events").To<RepoEventsController>())
+                .Add(new ApiRouter("watchers").To<RepoWatchersController>())
+                .Add(new ApiRouter("collaborators").To<RepoCollaboratorsController>()
+                        .Add(new ApiRouter("{userid}").To<RepoCollaboratorsController>())
                     )
-                .Add(new ApiRouter("downloads").DispatchTo<RepoDownloadsController>()
-                        .Add(new ApiRouter("{downloadid}").DispatchTo<RepoDownloadsController>())
+                .Add(new ApiRouter("downloads").To<RepoDownloadsController>()
+                        .Add(new ApiRouter("{downloadid}").To<RepoDownloadsController>())
                     )
-                .Add(new ApiRouter("keys").DispatchTo<RepoKeyController>()
-                        .Add(new ApiRouter("{keyid}").DispatchTo<RepoKeyController>())
+                .Add(new ApiRouter("keys").To<RepoKeyController>()
+                        .Add(new ApiRouter("{keyid}").To<RepoKeyController>())
                     )
-                .Add(new ApiRouter("commits").DispatchTo<RepoCommitsController>()
-                        .Add(new ApiRouter("{shaid}").DispatchTo<RepoCommitsController>()
-                                .Add(new ApiRouter("comments").DispatchTo<RepoCommitsCommentsController>())
+                .Add(new ApiRouter("commits").To<RepoCommitsController>()
+                        .Add(new ApiRouter("{shaid}").To<RepoCommitsController>()
+                                .Add(new ApiRouter("comments").To<RepoCommitsCommentsController>())
                             )
                     )
-                .Add(new ApiRouter("compare").Add(new ApiRouter(@"{baseid}\.\.\.{headid}")).DispatchTo<RepoCompareController>())
+                .Add(new ApiRouter("compare").Add(new ApiRouter(@"{baseid}\.\.\.{headid}")).To<RepoCompareController>())
                 .Add(new ApiRouter("pulls")
-                    .Add(new ApiRouter("comments").Add(new ApiRouter("{number}").DispatchTo<RepoPullsController>()))
-                    .Add(new ApiRouter(@"{number}").Add(new ApiRouter("comments").DispatchTo<RepoPullsController>()))
+                    .Add(new ApiRouter("comments").Add(new ApiRouter("{number}").To<RepoPullsController>()))
+                    .Add(new ApiRouter(@"{number}").Add(new ApiRouter("comments").To<RepoPullsController>()))
                     )
 
-                .Add(new ApiRouter("hooks").DispatchTo<RepoHooksController>()
-                        .Add(new ApiRouter("{hookid}").DispatchTo<RepoHooksController>()
-                                .Add(new ApiRouter("test").DispatchTo<RepoHooksTestController>())
+                .Add(new ApiRouter("hooks").To<RepoHooksController>()
+                        .Add(new ApiRouter("{hookid}").To<RepoHooksController>()
+                                .Add(new ApiRouter("test").To<RepoHooksTestController>())
                             )
-                    )                
-                );
-
-            Add(new ApiRouter("orgs").Add(new ApiRouter("{orgid}").DispatchTo<OrgController>()
-                .Add(new ApiRouter("events").DispatchTo<OrgEventsController>())
-                .Add(new ApiRouter("public_members").DispatchTo<OrgMembersController>(new { orgmemberfilter = "public" })
-                        .Add(new ApiRouter("{userid}").DispatchTo<OrgMembersController>())
                     )
-                .Add(new ApiRouter("members").DispatchTo<OrgMembersController>()
-                        .Add(new ApiRouter("{userid}").DispatchTo<OrgMembersController>())
+                )));
+
+            Add(new ApiRouter("orgs").Add(new ApiRouter("{orgid}").To<OrgController>()
+                .Add(new ApiRouter("events").To<OrgEventsController>())
+                .Add(new ApiRouter("public_members").To<OrgMembersController>(new { orgmemberfilter = "public" })
+                        .Add(new ApiRouter("{userid}").To<OrgMembersController>())
+                    )
+                .Add(new ApiRouter("members").To<OrgMembersController>()
+                        .Add(new ApiRouter("{userid}").To<OrgMembersController>())
                     )
                 ));
-
+            
+            Add(new ApiRouter("favicon.ico").To<EmptyController>());
+            Add(new ApiRouter("SiteMap").To<SiteMapController>());
+            
         }
     }
 
@@ -109,6 +116,42 @@ namespace GitHubApi
     public class RepoHooksController : DummyController { }
     public class RepoHooksTestController : DummyController { }
 
+
+    public class EmptyController : ApiController
+    {
+        public HttpResponseMessage Get()
+        {
+            return  new HttpResponseMessage();
+        }
+    }
+
+    public class SiteMapController : ApiController
+    {
+        public HttpResponseMessage Get()
+        {
+            
+            var pathRouteData = (PathRouteData) Request.GetRouteData();
+            var sb = new StringBuilder();
+            RenderRouterHierarchy(sb, pathRouteData.RootRouter);
+            return new HttpResponseMessage()
+                       {
+                           Content = new StringContent(sb.ToString())
+                       };
+        }
+
+        private void RenderRouterHierarchy(StringBuilder sb,  ApiRouter router, int depth = 0 )
+        {
+                sb.Append("".PadLeft(depth));
+                sb.Append('\\');
+                sb.Append(router.SegmentTemplate);
+                sb.Append(Environment.NewLine);
+            foreach (var childrouter in router.ChildRouters.Values)
+            {
+                RenderRouterHierarchy(sb, childrouter, depth + 2);
+            }
+        }
+    }
+
     public class DummyController : ApiController
     {
         public HttpResponseMessage Get()
@@ -121,7 +164,7 @@ namespace GitHubApi
             {
                 paramvalues.Append(keyValuePair.Key);
                 paramvalues.Append(" = ");
-                paramvalues.Append(keyValuePair.Value.ToString());
+                paramvalues.Append(keyValuePair.Value);
                 paramvalues.Append(Environment.NewLine);
             }
             return new HttpResponseMessage()
@@ -130,5 +173,8 @@ namespace GitHubApi
                        };
         }
     }
+
+
+    
 
 }

@@ -15,7 +15,7 @@ namespace WebHost
         void Application_Start(object sender, EventArgs e)
         {
 
-            GlobalConfiguration.Configuration.MessageHandlers.Add(new GitHubApiRouter());
+            GlobalConfiguration.Configuration.MessageHandlers.Add(new GitHubApiRouter(new Uri("http://localhost:9000/api")));
             GlobalConfiguration.Configuration.Routes.MapHttpRoute("api", "api/{*path}");  // Need this one route to get the messagehandlers to kick in.
 
         }

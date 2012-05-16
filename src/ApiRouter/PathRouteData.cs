@@ -10,28 +10,34 @@ namespace Tavis
         private readonly Uri _requestUri;
         private string[] _Segments;
         private int _Position;
-        private Dictionary<string, object> _values = new Dictionary<string, object>();
 
-        public PathRouteData(Uri requestUri)
+        private Dictionary<string, object> _values = new Dictionary<string, object>();
+        private List<ApiRouter> _SegmentRoutes = new List<ApiRouter>();
+
+        
+        public ApiRouter RootRouter { get { return _SegmentRoutes[0]; } }
+
+        public void AddRouter(ApiRouter router)
+        {
+            _SegmentRoutes.Add(router);
+        }
+
+
+        public PathRouteData(Uri requestUri, int initialPosition)
         {
             _requestUri = requestUri;
             _Segments = _requestUri.Segments;
-            _Position = 0;
+            _Position = initialPosition;
     
         }
 
-        public IHttpRoute Route { get { return null; } }
+        public IHttpRoute Route { get; internal set; }
 
         public bool EndOfPath()
         {
             return _Position == (_Segments.LongCount()-1);
         }
 
-        public int Position
-        {
-            get { return _Position; }
-            set { _Position = value; }
-        }
 
         public string CurrentSegment
         {

@@ -17,7 +17,7 @@ namespace ApiRouterTests
         [Fact]
         public void RouteRootPath()
         {
-            var root = new ApiRouter("").DispatchTo<FakeController>(new {ControllerId = "Root"});
+            var root = new ApiRouter("").To<FakeController>(new {ControllerId = "Root"});
 
             var httpClient = new HttpClient(root);
 
@@ -31,7 +31,7 @@ namespace ApiRouterTests
         public void RouteStaticPath()
         {
             var root = new ApiRouter("")
-                        .Add(new ApiRouter("Desktop").DispatchTo<FakeController>(new {ControllerId = "Desktop"}));
+                        .Add(new ApiRouter("Desktop").To<FakeController>(new {ControllerId = "Desktop"}));
 
             var httpClient = new HttpClient(root);
 
@@ -45,11 +45,11 @@ namespace ApiRouterTests
         public void RouteWithinLargeStaticPath()
         {
             var root = new ApiRouter("")
-                        .Add(new ApiRouter("Mobile").DispatchTo<FakeController>(new {ControllerId = "Mobile"}))
+                        .Add(new ApiRouter("Mobile").To<FakeController>(new {ControllerId = "Mobile"}))
                         .Add(new ApiRouter("Admin")
                                 .Add(new ApiRouter("Backups"))
-                                .Add(new ApiRouter("Hotfixes").DispatchTo<FakeController>(new {ControllerId = "Hotfixes"})))
-                        .Add(new ApiRouter("Desktop").DispatchTo<FakeController>(new {ControllerId = "Desktop"}));
+                                .Add(new ApiRouter("Hotfixes").To<FakeController>(new {ControllerId = "Hotfixes"})))
+                        .Add(new ApiRouter("Desktop").To<FakeController>(new {ControllerId = "Desktop"}));
 
             var httpClient = new HttpClient(root);
 
@@ -65,7 +65,7 @@ namespace ApiRouterTests
         {
             var root = new ApiRouter("")
                         .Add(new ApiRouter("Contact")
-                                .Add(new ApiRouter("{id}").DispatchTo<FakeController>(new {ControllerId = "Contact"})));
+                                .Add(new ApiRouter("{id}").To<FakeController>(new {ControllerId = "Contact"})));
 
             var httpClient = new HttpClient(root);
 
@@ -82,7 +82,7 @@ namespace ApiRouterTests
         {
             var fakeHandler = new FakeHandler();
             
-            var root = new ApiRouter("").WithHandler(fakeHandler).DispatchTo<FakeController>();
+            var root = new ApiRouter("").WithHandler(fakeHandler).To<FakeController>();
                         
             var httpClient = new HttpClient(root);
 
@@ -106,7 +106,7 @@ namespace ApiRouterTests
         [Fact]
         public void PathParserWithEmptyUri()
         {
-            var pathParser = new PathRouteData(new Uri("http://localhost"));
+            var pathParser = new PathRouteData(new Uri("http://localhost"),0);
             Assert.True(pathParser.EndOfPath());
         }
 
@@ -114,14 +114,14 @@ namespace ApiRouterTests
         [Fact]
         public void PathParserShouldInitializeWithRootAsFirstSegment()
         {
-            var pathParser = new PathRouteData(new Uri("http://localhost/Desktop"));
+            var pathParser = new PathRouteData(new Uri("http://localhost/Desktop"), 0);
             Assert.Equal("",pathParser.CurrentSegment);
         }
 
         [Fact]
         public void PathParserCanWalk()
         {
-            var pathParser = new PathRouteData(new Uri("http://localhost/foo"));
+            var pathParser = new PathRouteData(new Uri("http://localhost/foo"), 0);
             pathParser.MoveToNext();
             Assert.Equal("foo", pathParser.CurrentSegment);
             Assert.True(pathParser.EndOfPath());
@@ -131,18 +131,59 @@ namespace ApiRouterTests
         [Fact]
         public void gamesRoutes()
         {
-var router = 
-    new ApiRouter("games")
-    .Add(new ApiRouter("{gametitle}")
-            .Add(new ApiRouter("Setup").Add(new ApiRouter("{gameid}"))).DispatchTo<SetupController>()
-            .Add(new ApiRouter("Resources").Add(new ApiRouter("{resourcetype}").Add(new ApiRouter("{resourceId}")))).DispatchTo<ResourceController>()
-            .Add(new ApiRouter("{gameid}")
-                    .Add(new ApiRouter("Chat").Add(new ApiRouter("{chatid}"))).DispatchTo<ChatController>()
-                    .Add(new ApiRouter("State").Add(new ApiRouter("{stateid}"))).DispatchTo<StateController>()
-            ));
-}
+            var router =
+                new ApiRouter("games")
+                    .Add(new ApiRouter("{gametitle}")
+                             .Add(new ApiRouter("Setup").Add(new ApiRouter("{gameid}"))).To<SetupController>()
+                             .Add(
+                                 new ApiRouter("Resources").Add(
+                                     new ApiRouter("{resourcetype}").Add(new ApiRouter("{resourceId}")))).To
+                             <ResourceController>()
+                             .Add(new ApiRouter("{gameid}")
+                                      .Add(new ApiRouter("Chat").Add(new ApiRouter("{chatid}"))).To<ChatController>()
+                                      .Add(new ApiRouter("State").Add(new ApiRouter("{stateid}"))).To<StateController>()
+                             ));
+        }
 
+
+        [Fact]
+        public void GraftRouterAtSubTree()
+        {
+            var router = new ApiRouter("foo",new Uri("http://localhost/blah/")).To<FakeController>();
+
+            var httpClient = new HttpClient(router);
+
+            var response = httpClient.GetAsync("http://localhost/blah/foo").Result;
+
+            Assert.True(FakeController.WasInstantiated);
+        }
+
+        [Fact]
+        public void GraftRouterAtRoot()
+        {
+            var router = new ApiRouter("", new Uri("http://localhost/")).To<FakeController>();
+
+            var httpClient = new HttpClient(router);
+
+            var response = httpClient.GetAsync("http://localhost/").Result;
+
+            Assert.True(FakeController.WasInstantiated);
+        }
+
+        [Fact]
+        public void GraftRouterAtRootB()
+        {
+            var router = new ApiRouter("", new Uri("http://localhost/api/")).To<FakeController>();
+
+            var httpClient = new HttpClient(router);
+
+            var response = httpClient.GetAsync("http://localhost/api").Result;
+
+            Assert.True(FakeController.WasInstantiated);
+        }
     }
+
+
 
     public class SetupController: ApiController { }
     public class ResourceController : ApiController { }

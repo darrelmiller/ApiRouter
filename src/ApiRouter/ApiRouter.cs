@@ -27,12 +27,22 @@ namespace Tavis
         public ApiRouter ParentRouter { get; set; }
 
         private DelegatingHandler _MessageHandler;
+        private int _InitalPosition = 0;
+
+        public ApiRouter(string segmentTemplate, Uri baseUrl) : this(segmentTemplate)
+        {
+            var apiRoot = new Uri(baseUrl, segmentTemplate);
+            _InitalPosition = apiRoot.Segments.Length - 1;
+        }
 
         public ApiRouter(string segmentTemplate) 
         {
             _segmentTemplate = segmentTemplate;
             _MatchPattern = CreateMatchPattern(segmentTemplate);
             
+        }
+
+        public IDictionary<string,ApiRouter> ChildRouters { get { return _childRouters; }
         }
 
         private static Regex CreateMatchPattern(string segmentTemplate)
@@ -97,6 +107,8 @@ namespace Tavis
             
             return this;
         }
+        
+
         public ApiRouter Add(ApiRouter childRouter)
         {
             
@@ -135,7 +147,7 @@ namespace Tavis
                 base.SendAsync(request, cancellationToken);  // Call message handler, which will call back into here.
             }
 
-
+            pathRouteData.AddRouter(this); // Track ApiRouters used to resolve path
 
             if (pathRouteData.EndOfPath())
             {
@@ -192,7 +204,7 @@ namespace Tavis
 
                 if (pathRouteData == null)
                 {
-                    pathRouteData = new PathRouteData(request.RequestUri);
+                    pathRouteData = new PathRouteData(request.RequestUri, _InitalPosition);
 
                     // Do we need to copy over the properties???
                     foreach (var value in currentRouteData.Values)
@@ -207,7 +219,7 @@ namespace Tavis
             } else
             {
                 // Self host will not create RouteData itself
-                pathRouteData = new PathRouteData(request.RequestUri);
+                pathRouteData = new PathRouteData(request.RequestUri, _InitalPosition);
                 request.Properties.Add(new KeyValuePair<string, object>(HttpPropertyKeys.HttpRouteDataKey, pathRouteData));
             }
 
@@ -296,17 +308,17 @@ namespace Tavis
         }
 
 
-        public ApiRouter DispatchTo<T>()
+        public ApiRouter To<T>()
         {
             _ControllerType = typeof(T);
             _hasController = true;
             return this;
         }
-        public ApiRouter DispatchTo<T>(object routeValues)
+        public ApiRouter To<T>(object routeValues)
         {
             _ConfiguredRouteData = new HttpRouteValueDictionary(routeValues);
 
-            DispatchTo<T>();
+            To<T>();
             return this;
         }
 
@@ -338,6 +350,25 @@ namespace Tavis
         }
     }
 
+
+    public static class ApiRouterExtensions
+    {
+        public static ApiRouter Add(this ApiRouter router, string childSegmentTemplate)
+        {
+            return router.Add(new ApiRouter(childSegmentTemplate));
+        }
+
+
+
+        public static ApiRouter Add(this ApiRouter router, ApiRouter childRouter)
+        {
+            return router.Add(childRouter);
+        }
+        
+        
+
+
+    }
     
    
     
