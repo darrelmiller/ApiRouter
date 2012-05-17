@@ -132,17 +132,18 @@ namespace ApiRouterTests
         public void gamesRoutes()
         {
             var router =
-                new ApiRouter("games")
-                    .Add(new ApiRouter("{gametitle}")
-                             .Add(new ApiRouter("Setup").Add(new ApiRouter("{gameid}"))).To<SetupController>()
-                             .Add(
-                                 new ApiRouter("Resources").Add(
-                                     new ApiRouter("{resourcetype}").Add(new ApiRouter("{resourceId}")))).To
-                             <ResourceController>()
-                             .Add(new ApiRouter("{gameid}")
-                                      .Add(new ApiRouter("Chat").Add(new ApiRouter("{chatid}"))).To<ChatController>()
-                                      .Add(new ApiRouter("State").Add(new ApiRouter("{stateid}"))).To<StateController>()
+                new ApiRouter("games", new Uri("http://localhost/"))
+                    .Add("{gametitle}", rg => rg
+                             .Add("Setup", rs => rs.Add("{gameid}", rgi => rgi.To<SetupController>()))
+                             .Add("Resources", rr => rr.Add("{resourcetype}", rt => rt.Add("{resourceId}", ri => ri.To<ResourceController>())))
+                             .Add("{gameid}", rgi => rgi
+                                      .Add("Chat", rc => rc.Add("{chatid}", rci => rci.To<ChatController>()))
+                                      .Add("State", rs => rs.Add("{stateid}", rsi => rsi.To<StateController>()))
                              ));
+
+            var url = router.GetUrlForController(typeof(ChatController));
+
+            Assert.Equal("http://localhost/games/{gametitle}/{gameid}/Chat/{chatid}", url.OriginalString);
         }
 
 
@@ -180,6 +181,18 @@ namespace ApiRouterTests
             var response = httpClient.GetAsync("http://localhost/api").Result;
 
             Assert.True(FakeController.WasInstantiated);
+        }
+
+
+        [Fact]
+        public void GetUrlOfController()
+        {
+            var router = new ApiRouter("foo", new Uri("http://localhost/api/")).To<FakeController>();
+
+
+            var url = router.GetUrlForController(typeof (FakeController));
+
+            Assert.Equal("http://localhost/api/foo", url.AbsoluteUri);
         }
     }
 

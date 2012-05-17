@@ -17,6 +17,7 @@ namespace Tavis
 {
     public class ApiRouter : DelegatingHandler
     {
+        private readonly Uri _baseUrl;
         private readonly string _segmentTemplate;
         private readonly Dictionary<string, ApiRouter> _childRouters = new Dictionary<string, ApiRouter>();
         private bool _hasController;
@@ -28,9 +29,11 @@ namespace Tavis
 
         private DelegatingHandler _MessageHandler;
         private int _InitalPosition = 0;
+        private string _ControllerInstanceName;
 
         public ApiRouter(string segmentTemplate, Uri baseUrl) : this(segmentTemplate)
         {
+            _baseUrl = baseUrl;
             var apiRoot = new Uri(baseUrl, segmentTemplate);
             _InitalPosition = apiRoot.Segments.Length - 1;
         }
@@ -107,7 +110,14 @@ namespace Tavis
             
             return this;
         }
-        
+
+
+        public ApiRouter Add(string childSegmentTemplate, Action<ApiRouter> configure)
+        {
+            var childrouter = new ApiRouter(childSegmentTemplate);
+            configure(childrouter);
+            return Add(childrouter);
+        }
 
         public ApiRouter Add(ApiRouter childRouter)
         {
@@ -117,6 +127,7 @@ namespace Tavis
             childRouter.ParentRouter = this;    
             return this;
         }
+
         protected override System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
         {
             PathRouteData pathRouteData;
@@ -142,9 +153,11 @@ namespace Tavis
                 pathRouteData = (PathRouteData)GetRouteData(request);
             }
 
+            
+
             if (beforeMessageHandler)
             {
-                base.SendAsync(request, cancellationToken);  // Call message handler, which will call back into here.
+                return base.SendAsync(request, cancellationToken);  // Call message handler, which will call back into here.
             }
 
             pathRouteData.AddRouter(this); // Track ApiRouters used to resolve path
@@ -157,7 +170,9 @@ namespace Tavis
                 }
                 else
                 {
-                    throw new HttpResponseException(HttpStatusCode.NotFound);
+                    var tcs = new TaskCompletionSource<HttpResponseMessage>();
+                    tcs.SetResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+                    return tcs.Task;
                 }
             } else
             {
@@ -170,7 +185,9 @@ namespace Tavis
                     return nextRouter.SendAsync(request, cancellationToken);
                 }
 
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+                var tcs = new TaskCompletionSource<HttpResponseMessage>();
+                tcs.SetResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+                return tcs.Task;
 
                 
             }
@@ -264,9 +281,6 @@ namespace Tavis
                 }
             }
 
-          
-            
-            
             return true;
             
         }
@@ -308,17 +322,18 @@ namespace Tavis
         }
 
 
-        public ApiRouter To<T>()
+        public ApiRouter To<T>(string instance = null)
         {
+            _ControllerInstanceName = instance;
             _ControllerType = typeof(T);
             _hasController = true;
             return this;
         }
-        public ApiRouter To<T>(object routeValues)
+        public ApiRouter To<T>(object routeValues, string instance = null)
         {
             _ConfiguredRouteData = new HttpRouteValueDictionary(routeValues);
 
-            To<T>();
+            To<T>(instance);
             return this;
         }
 
@@ -348,29 +363,39 @@ namespace Tavis
             return true;
 
         }
-    }
 
-
-    public static class ApiRouterExtensions
-    {
-        public static ApiRouter Add(this ApiRouter router, string childSegmentTemplate)
+        public Uri GetUrlForController(Type type, string instance = null)
         {
-            return router.Add(new ApiRouter(childSegmentTemplate));
+            var leafRouter = FindControllerRouter(type, instance);
+            if (leafRouter == null) return null;
+
+            string url = leafRouter.SegmentTemplate ;
+            while (leafRouter.ParentRouter != null)
+            {
+                leafRouter = leafRouter.ParentRouter;
+                url = leafRouter.SegmentTemplate + @"/" + url;
+            }
+            return new Uri(_baseUrl,url);
+            
         }
 
 
 
-        public static ApiRouter Add(this ApiRouter router, ApiRouter childRouter)
+        public ApiRouter FindControllerRouter(Type type, string instance = null)
         {
-            return router.Add(childRouter);
+
+            if (_hasController && _ControllerType == type && _ControllerInstanceName == instance) return this;
+
+            foreach (var childRouter in ChildRouters.Values)
+            {
+                var router = childRouter.FindControllerRouter(type, instance);
+                if (router != null) return router;
+            }
+            return null;
         }
-        
-        
-
-
     }
-    
-   
+
+
     
 
     public class RegexConstraint : IHttpRouteConstraint

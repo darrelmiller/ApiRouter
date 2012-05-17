@@ -12,75 +12,73 @@ namespace GitHubApi
     public class GitHubApiRouter : ApiRouter
     {
 
-        public GitHubApiRouter(Uri baseUrl)
-            : base("", baseUrl)
+        public GitHubApiRouter(Uri baseUrl) : base("", baseUrl)
         {
 
             To<RootController>();
 
-            Add(new ApiRouter("issues").To<IssuesController>());
-            Add(new ApiRouter("events").To<EventsController>());
-            Add(new ApiRouter("networks").Add(new ApiRouter("{userid}").Add(new ApiRouter("{repoid}")))).To<NetworksController>();
+            Add("issues", ri=> ri.To<IssuesController>());
+            Add("events", ri => ri.To<EventsController>());
+            Add("networks", rn => rn.Add("{userid}", ru => ru.Add("{repoid}", rr => rr.To<NetworksController>())));
 
-            Add(new ApiRouter("gists").To<GistsController>()
-                .Add(new ApiRouter("public").To<GistsController>(new { gistfilter = "public" }))
-                .Add(new ApiRouter("starred").To<GistsController>(new { gistfilter = "starred" }))
-                .Add(new ApiRouter("{gistid}").To<GistController>()
-                         .Add("comments").To<GistCommentsController>()
-                         .Add("star").To<GistController>(new { action = "Star" })
-                         .Add("fork").To<GistController>(new { action = "Fork" })
+            Add("gists",rg => rg.To<GistsController>()
+                    .Add("public",rp => rp.To<GistsController>(new { gistfilter = "public" }))
+                    .Add("starred", rs => rs.To<GistsController>(new { gistfilter = "starred" }))
+                    .Add("{gistid}", rgi => rgi.To<GistController>("justid")
+                         .Add("comments", rc => rc.To<GistCommentsController>())
+                         .Add("star", rs=> rs.To<GistController>(new { action = "Star" }, "star"))
+                         .Add("fork", rf => rf.To<GistController>(new { action = "Fork" }, "fork"))
                 ));
 
 
-            Add(new ApiRouter("repos").Add(new ApiRouter("{userid}").Add(new ApiRouter("{repoid}").To<RepoController>()
-                .Add(new ApiRouter("labels").To<RepoLabelsController>())
-                .Add(new ApiRouter("milestones").To<RepoMilestonesController>())
-                .Add(new ApiRouter("contributors").To<RepoContributorsController>())
-                .Add(new ApiRouter("languages").To<RepoLanguagesController>())
-                .Add(new ApiRouter("teams").To<RepoTeamsController>())
-                .Add(new ApiRouter("tags").To<RepoTagsController>())
-                .Add(new ApiRouter("branches").To<RepoBranchesController>())
-                .Add(new ApiRouter("events").To<RepoEventsController>())
-                .Add(new ApiRouter("watchers").To<RepoWatchersController>())
-                .Add(new ApiRouter("collaborators").To<RepoCollaboratorsController>()
-                        .Add(new ApiRouter("{userid}").To<RepoCollaboratorsController>())
+            Add("repos",re => re.Add("{userid}", ru => ru.Add("{repoid}", rr => rr.To<RepoController>()
+                .Add("labels", r => r.To<RepoLabelsController>())
+                .Add("milestones", r => r.To<RepoMilestonesController>())
+                .Add("contributors", r => r.To<RepoContributorsController>())
+                .Add("languages", r => r.To<RepoLanguagesController>())
+                .Add("teams", r => r.To<RepoTeamsController>())
+                .Add("tags", r => r.To<RepoTagsController>())
+                .Add("branches", r => r.To<RepoBranchesController>())
+                .Add("events", r => r.To<RepoEventsController>())
+                .Add("watchers", r => r.To<RepoWatchersController>())
+                .Add("collaborators", r => r.To<RepoCollaboratorsController>()
+                        .Add("{userid}", ruc => ruc.To<RepoCollaboratorsController>())
                     )
-                .Add(new ApiRouter("downloads").To<RepoDownloadsController>()
-                        .Add(new ApiRouter("{downloadid}").To<RepoDownloadsController>())
+                .Add("downloads",rd => rd.To<RepoDownloadsController>()
+                        .Add("{downloadid}", rdi => rdi.To<RepoDownloadsController>())
                     )
-                .Add(new ApiRouter("keys").To<RepoKeyController>()
-                        .Add(new ApiRouter("{keyid}").To<RepoKeyController>())
+                .Add("keys",rk => rk.To<RepoKeyController>()
+                        .Add("{keyid}", rki => rki.To<RepoKeyController>())
                     )
-                .Add(new ApiRouter("commits").To<RepoCommitsController>()
-                        .Add(new ApiRouter("{shaid}").To<RepoCommitsController>()
-                                .Add(new ApiRouter("comments").To<RepoCommitsCommentsController>())
+                .Add("commits", rc => rc.To<RepoCommitsController>()
+                        .Add("{shaid}", rcs => rcs.To<RepoCommitsController>()
+                                .Add("comments", rcc => rcc.To<RepoCommitsCommentsController>())
                             )
                     )
-                .Add(new ApiRouter("compare").Add(new ApiRouter(@"{baseid}\.\.\.{headid}")).To<RepoCompareController>())
-                .Add(new ApiRouter("pulls")
-                    .Add(new ApiRouter("comments").Add(new ApiRouter("{number}").To<RepoPullsController>()))
-                    .Add(new ApiRouter(@"{number}").Add(new ApiRouter("comments").To<RepoPullsController>()))
+                .Add("compare", rc => rc.Add(@"{baseid}\.\.\.{headid}", rco => rco.To<RepoCompareController>()))
+                .Add("pulls", rp => rp
+                    .Add("comments",rc => rc.Add("{number}", r => r.To<RepoPullsController>()))
+                    .Add(@"{number}", rn => rn.Add("comments", r => r.To<RepoPullsController>()))
                     )
 
-                .Add(new ApiRouter("hooks").To<RepoHooksController>()
-                        .Add(new ApiRouter("{hookid}").To<RepoHooksController>()
-                                .Add(new ApiRouter("test").To<RepoHooksTestController>())
+                .Add("hooks", rh => rh.To<RepoHooksController>()
+                        .Add("{hookid}", rhi => rhi.To<RepoHooksController>()
+                                .Add("test", rht => rht.To<RepoHooksTestController>())
                             )
-                    )
-                )));
+                    ))));
 
-            Add(new ApiRouter("orgs").Add(new ApiRouter("{orgid}").To<OrgController>()
-                .Add(new ApiRouter("events").To<OrgEventsController>())
-                .Add(new ApiRouter("public_members").To<OrgMembersController>(new { orgmemberfilter = "public" })
-                        .Add(new ApiRouter("{userid}").To<OrgMembersController>())
+            Add("orgs", ro => ro.Add("{orgid}", roi => roi.To<OrgController>()
+                .Add("events", r => r.To<OrgEventsController>())
+                .Add("public_members", rpm => rpm.To<OrgMembersController>(new { orgmemberfilter = "public" })
+                        .Add("{userid}", ru => ru.To<OrgMembersController>())
                     )
-                .Add(new ApiRouter("members").To<OrgMembersController>()
-                        .Add(new ApiRouter("{userid}").To<OrgMembersController>())
+                .Add("members", r => r.To<OrgMembersController>()
+                        .Add("{userid}", ru => ru.To<OrgMembersController>())
                     )
                 ));
             
-            Add(new ApiRouter("favicon.ico").To<EmptyController>());
-            Add(new ApiRouter("SiteMap").To<SiteMapController>());
+            Add("favicon.ico", r => r.To<EmptyController>());
+            Add("SiteMap", r => r.To<SiteMapController>());
             
         }
     }
@@ -156,20 +154,26 @@ namespace GitHubApi
     {
         public HttpResponseMessage Get()
         {
-            var httpRouteData = Request.GetRouteData();
+            var pathRouteData = (PathRouteData) Request.GetRouteData();
 
             var paramvalues =new StringBuilder();
 
-            foreach (KeyValuePair<string, object> keyValuePair in httpRouteData.Values)
+            foreach (KeyValuePair<string, object> keyValuePair in pathRouteData.Values)
             {
                 paramvalues.Append(keyValuePair.Key);
                 paramvalues.Append(" = ");
                 paramvalues.Append(keyValuePair.Value);
                 paramvalues.Append(Environment.NewLine);
             }
+
+            var url = pathRouteData.RootRouter.GetUrlForController(this.GetType());
+
             return new HttpResponseMessage()
                        {
-                           Content = new StringContent("Response from " + this.GetType().Name  + Environment.NewLine + "Parameters: " + Environment.NewLine + paramvalues.ToString())
+                           Content = new StringContent("Response from " + this.GetType().Name  + Environment.NewLine
+                                                     + "Url: " + url.AbsoluteUri
+                                                     + "Parameters: " + Environment.NewLine 
+                                                     + paramvalues.ToString())
                        };
         }
     }
