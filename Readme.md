@@ -11,7 +11,8 @@ To handle the root path `/` you just need to create a router and connect a contr
 
 	new ApiRouter("").To<RootController>();
 
-To create a route with a child path segment, simply call Add with a child router. e.g. 
+To create a route with a child path segment, simply call Add with a child router. e.g.
+ 
 	new ApiRouter("")
 		.Add(new ApiRouter("search").To<SearchController>());
 
