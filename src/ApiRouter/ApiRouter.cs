@@ -12,24 +12,27 @@ using System.Web.Http.Controllers;
 using System.Web.Http.Dispatcher;
 using System.Web.Http.Hosting;
 using System.Web.Http.Routing;
+using System.Linq;
 
 namespace Tavis
 {
-    public class ApiRouter : DelegatingHandler
+    public class ApiRouter : DelegatingHandler, IHttpRoute
     {
         private readonly Uri _baseUrl;
         private readonly string _segmentTemplate;
         private readonly Dictionary<string, ApiRouter> _childRouters = new Dictionary<string, ApiRouter>();
-        private bool _hasController;
+        private bool _HasController;
         private Type _ControllerType;
         private HttpRouteValueDictionary _ConfiguredRouteData ;
-        private readonly Dictionary<string, IHttpRouteConstraint> _constraints = new Dictionary<string, IHttpRouteConstraint>();
+        private readonly Dictionary<string, IHttpRouteConstraint> _Constraints = new Dictionary<string, IHttpRouteConstraint>();
         private readonly Regex _MatchPattern;
         public ApiRouter ParentRouter { get; set; }
 
         private DelegatingHandler _MessageHandler;
         private int _InitalPosition = 0;
         private string _ControllerInstanceName;
+        private Dictionary<Type, Type> _Links = new Dictionary<Type, Type>();
+
 
         public ApiRouter(string segmentTemplate, Uri baseUrl) : this(segmentTemplate)
         {
@@ -43,6 +46,11 @@ namespace Tavis
             _segmentTemplate = segmentTemplate;
             _MatchPattern = CreateMatchPattern(segmentTemplate);
             
+        }
+
+        public ApiRouter RegisterLink<TLink, TController>() {
+            _Links.Add(typeof(TLink),typeof(TController));
+            return this;
         }
 
         public IDictionary<string,ApiRouter> ChildRouters { get { return _childRouters; }
@@ -89,12 +97,12 @@ namespace Tavis
 
         public ApiRouter WithConstraint(string parameterName, IHttpRouteConstraint constraint)
         {
-            _constraints.Add(parameterName, constraint);
+            _Constraints.Add(parameterName, constraint);
             return this;
         }
         public ApiRouter WithConstraint(string parameterName, string regexConstraint)
         {
-            _constraints.Add(parameterName,new RegexConstraint(regexConstraint));
+            _Constraints.Add(parameterName,new RegexConstraint(regexConstraint));
             
             return this;
         }
@@ -164,7 +172,7 @@ namespace Tavis
 
             if (pathRouteData.EndOfPath())
             {
-                if (_hasController)
+                if (_HasController)
                 {
                     return Dispatch(request, cancellationToken);
                 }
@@ -272,7 +280,7 @@ namespace Tavis
                 parameterValues.Add(name, value);
             }
 
-            foreach (var constraint in _constraints)
+            foreach (var constraint in _Constraints)
             {
                 var match = constraint.Value.Match(request, null, constraint.Key, parameterValues, HttpRouteDirection.UriResolution);
                 if (match == false)
@@ -326,7 +334,7 @@ namespace Tavis
         {
             _ControllerInstanceName = instance;
             _ControllerType = typeof(T);
-            _hasController = true;
+            _HasController = true;
             return this;
         }
         public ApiRouter To<T>(object routeValues, string instance = null)
@@ -369,22 +377,24 @@ namespace Tavis
             var leafRouter = FindControllerRouter(type, instance);
             if (leafRouter == null) return null;
 
-            string url = leafRouter.SegmentTemplate ;
-            while (leafRouter.ParentRouter != null)
-            {
-                leafRouter = leafRouter.ParentRouter;
-                url = leafRouter.SegmentTemplate + @"/" + url;
-            }
-            return new Uri(_baseUrl,url);
-            
+            return GetUrlFromRouter(leafRouter);
         }
 
+        public Uri GetUrlFromRouter(ApiRouter router) {
+            string url = router.SegmentTemplate ;
+            while (router.ParentRouter != null)
+            {
+                router = router.ParentRouter;
+                url = router.SegmentTemplate + @"/" + url;
+            }
+            return new Uri(_baseUrl,url);
+        }
 
 
         public ApiRouter FindControllerRouter(Type type, string instance = null)
         {
 
-            if (_hasController && _ControllerType == type && _ControllerInstanceName == instance) return this;
+            if (_HasController && _ControllerType == type && _ControllerInstanceName == instance) return this;
 
             foreach (var childRouter in ChildRouters.Values)
             {
@@ -392,6 +402,37 @@ namespace Tavis
                 if (router != null) return router;
             }
             return null;
+        }
+
+        IHttpRouteData IHttpRoute.GetRouteData(string virtualPathRoot, HttpRequestMessage request) {
+            throw new NotImplementedException();        
+        }
+
+        IHttpVirtualPathData IHttpRoute.GetVirtualPath(HttpControllerContext controllerContext, IDictionary<string, object> values) {
+            return new HttpVirtualPathData(this, GetUrlFromRouter(this).OriginalString);
+        }
+
+        string IHttpRoute.RouteTemplate {
+            get { return _segmentTemplate; }
+        }
+
+        IDictionary<string, object> IHttpRoute.Defaults {
+            get { throw new NotImplementedException(); }
+        }
+
+        IDictionary<string, object> IHttpRoute.Constraints {
+            get { throw new NotImplementedException(); }
+        }
+
+        IDictionary<string, object> IHttpRoute.DataTokens {
+            get { throw new NotImplementedException(); }
+        }
+
+        public Link GetLink<LinkType>() {
+            var controllerType = (from lk in _Links where lk.Key == typeof (LinkType) select lk.Value).FirstOrDefault();
+            var link = (Link)Activator.CreateInstance(typeof (LinkType));
+            link.Target = GetUrlForController(controllerType);
+            return link;
         }
     }
 
