@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -39,5 +40,22 @@ namespace ApiRouterTests
         {
             return new TaskFactory<HttpResponseMessage>().StartNew(() => Get(controllerContext.Request));
         }
+    }
+
+    public class FakeApiController : ApiController
+    {
+        private readonly Func<HttpRequestMessage, HttpResponseMessage> _getMethod;
+
+        public FakeApiController(Func<HttpRequestMessage, HttpResponseMessage> getMethod)
+        {
+            _getMethod = getMethod;
+        }
+
+        public HttpResponseMessage Get(HttpRequestMessage request)
+        {
+            return _getMethod(request);
+        }
+
+        
     }
 }
