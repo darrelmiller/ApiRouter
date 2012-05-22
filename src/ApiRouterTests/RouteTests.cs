@@ -38,7 +38,7 @@ namespace ApiRouterTests
             var response = httpClient.GetAsync("http://localhost/Desktop").Result;
 
             Assert.NotNull(response);
-            Assert.Equal("Desktnop", FakeController.ControllerId);
+            Assert.Equal("Desktop", FakeController.ControllerId);
         }
 
         [Fact]
@@ -207,6 +207,7 @@ namespace ApiRouterTests
             var link = router.ChildRouters["child"].GetLink<ParentLink>();
 
             Assert.Equal("http://localhost/api/foo", link.Target.AbsoluteUri);
+            Assert.IsType(typeof (ParentLink), link);
         }
     }
 

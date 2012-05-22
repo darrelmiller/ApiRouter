@@ -23,7 +23,7 @@ namespace Tavis
         private readonly Dictionary<string, ApiRouter> _childRouters = new Dictionary<string, ApiRouter>();
         private bool _HasController;
         private Type _ControllerType;
-        private HttpRouteValueDictionary _ConfiguredRouteData ;
+        private HttpRouteValueDictionary _Defaults ;
         private readonly Dictionary<string, IHttpRouteConstraint> _Constraints = new Dictionary<string, IHttpRouteConstraint>();
         private readonly Regex _MatchPattern;
         public ApiRouter ParentRouter { get; set; }
@@ -145,7 +145,7 @@ namespace Tavis
 
             if (beforeMessageHandler || _MessageHandler == null)
             {
-                pathRouteData = RetreiveRouteData(request);
+                pathRouteData = RetrieveRouteData(request);
 
                 // Parse Parameters from URL and add them to the PathRouteData
                 var result = _MatchPattern.Match(pathRouteData.CurrentSegment);
@@ -216,7 +216,7 @@ namespace Tavis
            
         }
 
-        private PathRouteData RetreiveRouteData(HttpRequestMessage request)
+        private PathRouteData RetrieveRouteData(HttpRequestMessage request)
         {
             PathRouteData pathRouteData;
 
@@ -250,9 +250,9 @@ namespace Tavis
 
 
             // Copy over values provided during Router setup
-            if (_ConfiguredRouteData != null)
+            if (_Defaults != null)
             {
-                foreach (var value in _ConfiguredRouteData)
+                foreach (var value in _Defaults)
                 {
                     pathRouteData.Values[value.Key] =  value.Value;
                 }
@@ -339,7 +339,7 @@ namespace Tavis
         }
         public ApiRouter To<T>(object routeValues, string instance = null)
         {
-            _ConfiguredRouteData = new HttpRouteValueDictionary(routeValues);
+            _Defaults = new HttpRouteValueDictionary(routeValues);
 
             To<T>(instance);
             return this;
@@ -431,8 +431,21 @@ namespace Tavis
         public Link GetLink<LinkType>() {
             var controllerType = (from lk in _Links where lk.Key == typeof (LinkType) select lk.Value).FirstOrDefault();
             var link = (Link)Activator.CreateInstance(typeof (LinkType));
-            link.Target = GetUrlForController(controllerType);
+            link.Target = RootRouter.GetUrlForController(controllerType);
             return link;
+        }
+
+        private ApiRouter RootRouter
+        {
+            get
+            {
+                ApiRouter target = this;
+                while (target.ParentRouter != null)
+                {
+                    target = ParentRouter;
+                }
+                return target;
+            }
         }
     }
 
