@@ -31,7 +31,7 @@ namespace Tavis
     
         }
 
-        public IHttpRoute Route { get; internal set; }
+        public IHttpRoute Route { get { return _SegmentRoutes.LastOrDefault(); } }
 
         public bool EndOfPath()
         {
