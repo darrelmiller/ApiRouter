@@ -428,9 +428,20 @@ namespace Tavis
             get { throw new NotImplementedException(); }
         }
 
-        public Link GetLink<LinkType>() {
-            var controllerType = (from lk in _Links where lk.Key == typeof (LinkType) select lk.Value).FirstOrDefault();
-            var link = (Link)Activator.CreateInstance(typeof (LinkType));
+        public Link GetLink<TLink>(HttpRequestMessage requestMessage)
+        {
+            var link = GetLink<TLink>();
+            var routeData = requestMessage.GetRouteData();
+            foreach(var value in  routeData.Values)
+            {
+                link.SetParameter(value.Key,value.Value);
+            }
+            return link;
+        }
+
+        public Link GetLink<TLink>() {
+            var controllerType = (from lk in _Links where lk.Key == typeof (TLink) select lk.Value).FirstOrDefault();
+            var link = (Link)Activator.CreateInstance(typeof (TLink));
             link.Target = RootRouter.GetUrlForController(controllerType);
             return link;
         }
@@ -442,7 +453,7 @@ namespace Tavis
                 ApiRouter target = this;
                 while (target.ParentRouter != null)
                 {
-                    target = ParentRouter;
+                    target = target.ParentRouter;
                 }
                 return target;
             }
