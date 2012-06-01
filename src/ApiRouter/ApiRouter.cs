@@ -300,20 +300,16 @@ namespace Tavis
 
             var controllerDescriptor = new HttpControllerDescriptor(configuration, _ControllerType.Name, _ControllerType);
 
+
+            IHttpControllerActivator activator = configuration.Services.GetHttpControllerActivator();
+            var httpController = activator.Create(request, controllerDescriptor, _ControllerType);
+
             var controllerContext = new HttpControllerContext(configuration, GetRouteData(request), request);
             controllerContext.ControllerDescriptor = controllerDescriptor;
-
-            IHttpControllerActivator activator = GetActivator(configuration);
-            var httpController = activator.Create(controllerContext, _ControllerType);
             controllerContext.Controller = httpController;
 
             return httpController.ExecuteAsync(controllerContext, cancellationToken);
 
-        }
-
-        private IHttpControllerActivator GetActivator(HttpConfiguration configuration)
-        {
-            return (IHttpControllerActivator)configuration.ServiceResolver.GetService(typeof (IHttpControllerActivator));
         }
 
         private HttpConfiguration GetConfiguration(HttpRequestMessage request)

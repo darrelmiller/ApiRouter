@@ -19,7 +19,7 @@ namespace ApiRouterTests
         {
             var root = new ApiRouter("").To<FakeController>(new { ControllerId = "Root" });
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost").Result;
 
@@ -33,7 +33,7 @@ namespace ApiRouterTests
             var root = new ApiRouter("")
                         .Add(new ApiRouter("Desktop").To<FakeController>(new { ControllerId = "Desktop" }));
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/Desktop").Result;
 
@@ -51,7 +51,7 @@ namespace ApiRouterTests
                                 .Add(new ApiRouter("Hotfixes").To<FakeController>(new { ControllerId = "Hotfixes" })))
                         .Add(new ApiRouter("Desktop").To<FakeController>(new { ControllerId = "Desktop" }));
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/Admin/Hotfixes").Result;
 
@@ -67,7 +67,7 @@ namespace ApiRouterTests
                         .Add(new ApiRouter("Contact")
                                 .Add(new ApiRouter("{id}").To<FakeController>(new { ControllerId = "Contact" })));
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/Contact/23").Result;
 
@@ -84,7 +84,7 @@ namespace ApiRouterTests
 
             var root = new ApiRouter("").WithHandler(fakeHandler).To<FakeController>();
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/").Result;
 

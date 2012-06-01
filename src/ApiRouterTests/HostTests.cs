@@ -4,6 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Http;
+using System.Web.Http.Dispatcher;
+using System.Web.Http.Hosting;
 using Tavis;
 using Xunit;
 
@@ -31,12 +33,14 @@ namespace ApiRouterTests
         }
 
 
+
+
         [Fact]
         public void GraftRouterAtSubTree()
         {
             var router = new ApiRouter("foo", new Uri("http://localhost/blah/")).To<FakeController>();
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/blah/foo").Result;
 
@@ -48,7 +52,7 @@ namespace ApiRouterTests
         {
             var router = new ApiRouter("", new Uri("http://localhost/")).To<FakeController>();
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/").Result;
 
@@ -60,7 +64,7 @@ namespace ApiRouterTests
         {
             var router = new ApiRouter("", new Uri("http://localhost/api/")).To<FakeController>();
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/api").Result;
 
@@ -75,5 +79,21 @@ namespace ApiRouterTests
         public class ChatController : ApiController { }
         public class StateController : ApiController { }
 
+    }
+
+    public class FakeServer : DelegatingHandler
+    {
+        public FakeServer(ApiRouter router)
+        {
+            InnerHandler = router;
+
+        }
+        protected override System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        {
+            var httpConfiguration = new HttpConfiguration();
+         //   httpConfiguration.Services.Add(typeof(IHttpControllerActivator), new TestControllerActivator());
+            request.Properties[HttpPropertyKeys.HttpConfigurationKey] = httpConfiguration;
+            return base.SendAsync(request, cancellationToken);
+        }
     }
 }

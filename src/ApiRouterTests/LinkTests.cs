@@ -76,7 +76,7 @@ namespace ApiRouterTests
                                     )
                                 );
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/Customer/23/").Result;
 
