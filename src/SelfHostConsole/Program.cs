@@ -16,7 +16,7 @@ namespace RoutingMessageHandlerConsole
             var config = new HttpSelfHostConfiguration(baseurl);
 
             config.MessageHandlers.Add(new GitHubApiRouter(baseurl));
-
+            
             var host = new HttpSelfHostServer(config);
             host.OpenAsync().Wait();
 

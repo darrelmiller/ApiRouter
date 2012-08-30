@@ -22,6 +22,7 @@ namespace GitHubApi
             Add("networks", rn => rn.Add("{userid}", ru => ru.Add("{repoid}", rr => rr.To<NetworksController>())));
 
             Add("gists",rg => rg.To<GistsController>()
+                    
                     .Add("public",rp => rp.To<GistsController>(new { gistfilter = "public" }))
                     .Add("starred", rs => rs.To<GistsController>(new { gistfilter = "starred" }))
                     .Add("{gistid}", rgi => rgi.To<GistController>("justid")

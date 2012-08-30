@@ -403,8 +403,8 @@ namespace Tavis
         IHttpRouteData IHttpRoute.GetRouteData(string virtualPathRoot, HttpRequestMessage request) {
             throw new NotImplementedException();        
         }
-
-        IHttpVirtualPathData IHttpRoute.GetVirtualPath(HttpControllerContext controllerContext, IDictionary<string, object> values) {
+        
+        IHttpVirtualPathData IHttpRoute.GetVirtualPath(HttpRequestMessage requestMessage, IDictionary<string, object> values) {
             return new HttpVirtualPathData(this, GetUrlFromRouter(this).OriginalString);
         }
 
@@ -423,6 +423,8 @@ namespace Tavis
         IDictionary<string, object> IHttpRoute.DataTokens {
             get { throw new NotImplementedException(); }
         }
+
+        public HttpMessageHandler Handler { get { return this; } }  // Not sure if this is correct.
 
         public Link GetLink<TLink>(HttpRequestMessage requestMessage)
         {
