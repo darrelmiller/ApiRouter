@@ -70,6 +70,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DiscoveryTests.cs" />
+    <Compile Include="Discovery\AreaA\ChildController.cs" />
+    <Compile Include="Discovery\AreaA\SubAreaAB\ChildABController.cs" />
+    <Compile Include="Discovery\AreaB\ChildBController.cs" />
+    <Compile Include="Discovery\ChildController.cs" />
+    <Compile Include="Discovery\OtherChildController.cs" />
+    <Compile Include="Discovery\RootController.cs" />
     <Compile Include="FakeController.cs" />
     <Compile Include="HostTests.cs" />
     <Compile Include="LinkTests.cs" />

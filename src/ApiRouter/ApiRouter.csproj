@@ -73,9 +73,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiRouterExtensions.cs" />
+    <Compile Include="PathParameterAttribute.cs" />
     <Compile Include="PathRouteData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ApiRouter.cs" />
+    <Compile Include="RouteDiscovery.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

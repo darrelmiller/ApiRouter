@@ -26,14 +26,14 @@ namespace ApiRouterTests
             WasInstantiated = true;
         }
 
-        public HttpResponseMessage Get(HttpRequestMessage request)
+        public virtual HttpResponseMessage Get(HttpRequestMessage request)
         {
             var httpRouteData = request.GetRouteData();
             if (httpRouteData.Values.ContainsKey("ControllerId"))
             {
                 ControllerId = (string) httpRouteData.Values["ControllerId"];
             }
-            return new HttpResponseMessage() {RequestMessage = request};
+            return new HttpResponseMessage() {RequestMessage = request, Content = new StringContent(this.GetType().Name)};
         }
 
         public Task<HttpResponseMessage> ExecuteAsync(HttpControllerContext controllerContext, CancellationToken cancellationToken)

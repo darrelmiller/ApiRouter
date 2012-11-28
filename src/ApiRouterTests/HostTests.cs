@@ -33,6 +33,21 @@ namespace ApiRouterTests
         }
 
 
+        [Fact]
+        public void gamesRoutes2()
+        {
+            var router = new ApiRouter("games", new Uri("http://localhost/"));
+            router.AddWithPath("{gametitle}/Setup/{gamesid}", apiRouter => apiRouter.To<SetupController>());
+            router.AddWithPath("{gametitle}/Resources/{resourcetype}/{resourceid}", apiRouter => apiRouter.To<ResourceController>());
+            router.AddWithPath("{gametitle}/{gameid}/Chat/{chatid}", apiRouter => apiRouter.To<ChatController>());
+            router.AddWithPath("{gametitle}/{gameid}/State/{stateid}", apiRouter => apiRouter.To<StateController>());
+
+            var url = router.GetUrlForController(typeof(ChatController));
+
+            Assert.Equal("http://localhost/games/{gametitle}/{gameid}/Chat/{chatid}", url.OriginalString);
+        }
+
+
 
 
         [Fact]
@@ -72,9 +87,24 @@ namespace ApiRouterTests
         }
 
 
+        [Fact]
+        public void BuildTreeFromPath() {
+            var router = new ApiRouter("", new Uri("http://localhost/"));
+
+            router.AddWithPath("foo/bar/baz", (r) => r.To<FakeController>() );
+
+            var httpClient = new HttpClient(new FakeServer(router));
+
+            var response = httpClient.GetAsync("http://localhost/foo/bar/baz").Result;
+
+            Assert.True(FakeController.WasInstantiated);
+        }
 
 
-        public class SetupController : ApiController { }
+
+
+
+        public class SetupController : FakeController { }
         public class ResourceController : ApiController { }
         public class ChatController : ApiController { }
         public class StateController : ApiController { }

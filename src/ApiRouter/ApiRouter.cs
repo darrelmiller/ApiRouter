@@ -59,7 +59,7 @@ namespace Tavis
         private static Regex CreateMatchPattern(string segmentTemplate)
         {
             var pattern = new StringBuilder();
-
+            pattern.Append("^");
             StringBuilder paramName = null;
             foreach (char tcharacter in segmentTemplate)
             {
@@ -87,6 +87,7 @@ namespace Tavis
                     paramName = null;
                 }
             }
+            pattern.Append("$");
             return new Regex(pattern.ToString(), RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
 
@@ -325,11 +326,15 @@ namespace Tavis
             return configuration;
         }
 
+        public ApiRouter To<T>(string instance = null) {
+            To(typeof (T), instance);
+            return this;
+        }
 
-        public ApiRouter To<T>(string instance = null)
+        internal ApiRouter To(Type type,string instance = null)
         {
             _ControllerInstanceName = instance;
-            _ControllerType = typeof(T);
+            _ControllerType = type;
             _HasController = true;
             return this;
         }
