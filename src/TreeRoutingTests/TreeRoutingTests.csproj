@@ -62,13 +62,13 @@
     <Compile Include="TavisRouteTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\TreeRoute\TreeRouting.csproj">
       <Project>{3a68ae97-2fe2-49af-9b88-8198cd319766}</Project>
       <Name>TreeRouting</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

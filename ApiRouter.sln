@@ -17,9 +17,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiRouterTests", "src\ApiRo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubApi", "src\GitHubApi\GitHubApi.csproj", "{29A01B44-6CD5-4F70-97F8-CDD56F2336B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeRouting", "TreeRoute\TreeRouting.csproj", "{3A68AE97-2FE2-49AF-9B88-8198CD319766}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeRouting", "src\TreeRoute\TreeRouting.csproj", "{3A68AE97-2FE2-49AF-9B88-8198CD319766}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeRoutingTests", "TreeRoutingTests\TreeRoutingTests.csproj", "{54DCF6DB-18D8-4F03-8568-B65B2D1E5CCF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeRoutingTests", "src\TreeRoutingTests\TreeRoutingTests.csproj", "{54DCF6DB-18D8-4F03-8568-B65B2D1E5CCF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

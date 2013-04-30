@@ -76,10 +76,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TreeRoute\TreeRouting.csproj">
-      <Project>{3A68AE97-2FE2-49AF-9B88-8198CD319766}</Project>
-      <Name>TreeRouting</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ApiRouter\ApiRouter.csproj">
       <Project>{D97C04B7-D7AC-4913-8404-4FD72576961F}</Project>
       <Name>ApiRouter</Name>
@@ -87,6 +83,10 @@
     <ProjectReference Include="..\GitHubApi\GitHubApi.csproj">
       <Project>{29A01B44-6CD5-4F70-97F8-CDD56F2336B3}</Project>
       <Name>GitHubApi</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TreeRoute\TreeRouting.csproj">
+      <Project>{3a68ae97-2fe2-49af-9b88-8198cd319766}</Project>
+      <Name>TreeRouting</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
