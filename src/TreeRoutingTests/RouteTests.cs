@@ -183,15 +183,15 @@ namespace TreeRoutingTests
         [Fact]
         public void gamesRoutes2()
         {
-            var router = new TreeRoute("games");
-            router.AddWithPath("{gametitle}/Setup/{gamesid}", apiRouter => apiRouter.To<SetupController>());
-            router.AddWithPath("{gametitle}/Resources/{resourcetype}/{resourceid}", apiRouter => apiRouter.To<ResourceController>());
-            router.AddWithPath("{gametitle}/{gameid}/Chat/{chatid}", apiRouter => apiRouter.To<ChatController>()); 
-            router.AddWithPath("{gametitle}/{gameid}/State/{stateid}", apiRouter => apiRouter.To<StateController>());
+            var route = new TreeRoute("games");
+            route.AddWithPath("{gametitle}/Setup/{gamesid}", r => r.To<SetupController>());
+            route.AddWithPath("{gametitle}/Resources/{resourcetype}/{resourceid}", r => r.To<ResourceController>());
+            route.AddWithPath("{gametitle}/{gameid}/Chat/{chatid}", r => r.To<ChatController>()); 
+            route.AddWithPath("{gametitle}/{gameid}/State/{stateid}", r => r.To<StateController>());
 
-            var getRouteData = router.GetRouteData("/", new HttpRequestMessage() { RequestUri = new Uri("http://localhost/games/GodsOfWar/277/Chat/177") });
+            var getRouteData = route.GetRouteData("/", new HttpRequestMessage() { RequestUri = new Uri("http://localhost/games/GodsOfWar/277/Chat/177") });
 
-            var url = router.GetUrlForController(typeof(ChatController));
+            var url = route.GetUrlForController(typeof(ChatController));
 
             Assert.Equal("Chat", getRouteData.Values["controller"]);
             Assert.Equal("GodsOfWar", getRouteData.Values["gametitle"]);
