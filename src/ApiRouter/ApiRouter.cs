@@ -149,11 +149,11 @@ namespace Tavis
                 pathRouteData = RetrieveRouteData(request);
 
                 // Parse Parameters from URL and add them to the PathRouteData
-                var result = _MatchPattern.Match(pathRouteData.CurrentSegment);
+                var result = MatchPattern.Match(pathRouteData.CurrentSegment);
 
                 for (int i = 1; i < result.Groups.Count; i++)
                 {
-                    var name = _MatchPattern.GroupNameFromNumber(i);
+                    var name = MatchPattern.GroupNameFromNumber(i);
                     var value = result.Groups[i].Value;
                     pathRouteData.SetParameter(name, value);
                 }
@@ -173,7 +173,7 @@ namespace Tavis
 
             if (pathRouteData.EndOfPath())
             {
-                if (_HasController)
+                if (HasController)
                 {
                     return Dispatch(request, cancellationToken);
                 }
@@ -217,7 +217,7 @@ namespace Tavis
            
         }
 
-        private PathRouteData RetrieveRouteData(HttpRequestMessage request)
+        internal PathRouteData RetrieveRouteData(HttpRequestMessage request)
         {
             PathRouteData pathRouteData;
 
@@ -230,7 +230,7 @@ namespace Tavis
 
                 if (pathRouteData == null)
                 {
-                    pathRouteData = new PathRouteData(request.RequestUri, _InitalPosition);
+                    pathRouteData = CreatePathRouteDate(request);
 
                     // Do we need to copy over the properties???
                     foreach (var value in currentRouteData.Values)
@@ -261,6 +261,11 @@ namespace Tavis
             return pathRouteData;
         }
 
+        internal PathRouteData CreatePathRouteDate(HttpRequestMessage request)
+        {
+            return new PathRouteData(request.RequestUri, _InitalPosition);;
+        }
+
         private IHttpRouteData GetRouteData(HttpRequestMessage request)
         {
             return (IHttpRouteData)request.Properties[HttpPropertyKeys.HttpRouteDataKey];
@@ -268,7 +273,7 @@ namespace Tavis
 
         public bool Matches(HttpRequestMessage request, string paramTemplate)
         {
-            var result = _MatchPattern.Match(paramTemplate);
+            var result = MatchPattern.Match(paramTemplate);
             if (!result.Success)
                 return false;
 
@@ -276,7 +281,7 @@ namespace Tavis
             var parameterValues = new Dictionary<string, object>();
             for (int i = 1; i < result.Groups.Count; i++)
             {
-                var name = _MatchPattern.GroupNameFromNumber(i);
+                var name = MatchPattern.GroupNameFromNumber(i);
                 var value = result.Groups[i].Value;
                 parameterValues.Add(name, value);
             }
@@ -293,17 +298,17 @@ namespace Tavis
             return true;
             
         }
-     
 
-        private Task<HttpResponseMessage> Dispatch(HttpRequestMessage request, CancellationToken cancellationToken)
+
+        internal Task<HttpResponseMessage> Dispatch(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             HttpConfiguration configuration = GetConfiguration(request);
 
-            var controllerDescriptor = new HttpControllerDescriptor(configuration, _ControllerType.Name, _ControllerType);
+            var controllerDescriptor = new HttpControllerDescriptor(configuration, ControllerType.Name, ControllerType);
 
 
             IHttpControllerActivator activator = configuration.Services.GetHttpControllerActivator();
-            var httpController = activator.Create(request, controllerDescriptor, _ControllerType);
+            var httpController = activator.Create(request, controllerDescriptor, ControllerType);
 
             var controllerContext = new HttpControllerContext(configuration, GetRouteData(request), request);
             controllerContext.ControllerDescriptor = controllerDescriptor;
@@ -395,7 +400,7 @@ namespace Tavis
         public ApiRouter FindControllerRouter(Type type, string instance = null)
         {
 
-            if (_HasController && _ControllerType == type && _ControllerInstanceName == instance) return this;
+            if (HasController && ControllerType == type && _ControllerInstanceName == instance) return this;
 
             foreach (var childRouter in ChildRouters.Values)
             {
@@ -460,6 +465,21 @@ namespace Tavis
                 }
                 return target;
             }
+        }
+
+        internal Regex MatchPattern
+        {
+            get { return _MatchPattern; }
+        }
+
+        internal bool HasController
+        {
+            get { return _HasController; }
+        }
+
+        internal Type ControllerType
+        {
+            get { return _ControllerType; }
         }
     }
 

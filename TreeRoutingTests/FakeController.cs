@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 
-namespace ApiRouterTests
+namespace TreeRoutingTests
 {
     public class Fake3Controller : FakeController { }
     public class Fake4Controller : FakeController { }

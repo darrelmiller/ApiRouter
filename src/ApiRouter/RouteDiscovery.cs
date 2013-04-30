@@ -16,7 +16,7 @@ namespace Tavis
 
         public static ApiRouter Search(Type rootType, Uri baseUri) {
             var typename = GetSegmentFromControllerType(rootType);
-            var router = new ApiRouter(typename, baseUri).To(rootType);
+            var router = new ApiRouter("", baseUri).To(rootType);
 
             // Find controllers in the namespaces below type
             var controllers = rootType.Assembly.GetTypes()

@@ -27,6 +27,9 @@ namespace ApiRouterTests
             Assert.Equal("Root", FakeController.ControllerId);
         }
 
+
+      
+
         [Fact]
         public void RouteStaticPath()
         {
@@ -60,6 +63,9 @@ namespace ApiRouterTests
             Assert.Equal("Hotfixes", FakeController.ControllerId);
         }
 
+     
+
+
         [Fact]
         public void RouteWithParameterSegement()
         {
@@ -75,6 +81,8 @@ namespace ApiRouterTests
             Assert.Equal("23", pathparser.GetParameter("id"));
             Assert.Equal("Contact", FakeController.ControllerId);
         }
+
+    
 
 
         [Fact]

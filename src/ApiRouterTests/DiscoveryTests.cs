@@ -24,7 +24,7 @@ namespace ApiRouterTests
         public void WhenRequestingRootThenRootShouldRespond()
         {
 
-            var response = _httpClient.GetAsync("http://localhost/Root").Result;
+            var response = _httpClient.GetAsync("http://localhost/").Result;
 
             Assert.Equal("RootController", response.Content.ReadAsStringAsync().Result);
         }
@@ -35,7 +35,7 @@ namespace ApiRouterTests
         public void WhenRequestingOtherChildOfRootThenOtherChildOfRootShouldRespond()
         {
 
-            var response = _httpClient.GetAsync("http://localhost/Root/OtherChild").Result;
+            var response = _httpClient.GetAsync("http://localhost/OtherChild").Result;
 
             Assert.Equal("OtherChildController", response.Content.ReadAsStringAsync().Result);
         }
@@ -44,7 +44,7 @@ namespace ApiRouterTests
         public void WhenRequestingChildOfRootThenChildOfRootShouldRespond()
         {
 
-            var response = _httpClient.GetAsync("http://localhost/Root/Child").Result;
+            var response = _httpClient.GetAsync("http://localhost/Child").Result;
 
             Assert.Equal("0", response.Content.ReadAsStringAsync().Result);
         }
@@ -53,7 +53,7 @@ namespace ApiRouterTests
         public void WhenRequestingChildWithParameterTheValueShouldBePassed()
         {
 
-            var response = _httpClient.GetAsync("http://localhost/Root/Child/23").Result;
+            var response = _httpClient.GetAsync("http://localhost/Child/23").Result;
 
             Assert.Equal("23", response.Content.ReadAsStringAsync().Result);
         }
@@ -62,7 +62,7 @@ namespace ApiRouterTests
         public void ChildControllerInArea()
         {
 
-            var response = _httpClient.GetAsync("http://localhost/Root/AreaA/Child").Result;
+            var response = _httpClient.GetAsync("http://localhost/AreaA/Child").Result;
 
             Assert.Equal("AreaA Child", response.Content.ReadAsStringAsync().Result);
         }
@@ -71,7 +71,7 @@ namespace ApiRouterTests
         public void ChildControllerInSubArea()
         {
 
-            var response = _httpClient.GetAsync("http://localhost/Root/AreaA/SubAreaAB/ChildAB/75").Result;
+            var response = _httpClient.GetAsync("http://localhost/AreaA/SubAreaAB/ChildAB/75").Result;
 
             Assert.Equal("SubAreaAB Child 75", response.Content.ReadAsStringAsync().Result);
         }
@@ -79,7 +79,7 @@ namespace ApiRouterTests
         public void ChildControllerInSubAreaWithoutParam()
         {
 
-            var response = _httpClient.GetAsync("http://localhost/Root/AreaA/SubAreaAB/ChildAB").Result;
+            var response = _httpClient.GetAsync("http://localhost/AreaA/SubAreaAB/ChildAB").Result;
 
             Assert.Equal("SubAreaAB Child 0", response.Content.ReadAsStringAsync().Result);
         }
