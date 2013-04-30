@@ -2,8 +2,11 @@
 
 This message handler is an an alternative to using MVC Routes in a Web API project to route requests to controllers.
 
-Routers are created at service initialization time in a hierarchy that matches the URI space of the API and controllers are attached to routers in the hierarchy.  
-Update:
+Routers are created at service initialization time in a hierarchy that matches the URI space of the API and controllers are attached to routers in the hierarchy.
+
+
+## Update: ##
+
 With version 0.1.8 there is now a new class TreeRoute that implements IHttpRoute so it can be used alongside regular ASP.NET Routing.  There is no need to for a messagehandler any more.
 
 Basic usage:
@@ -18,9 +21,7 @@ to use the route, simply add it to your route collection.
 
        config.Routes.Add("mytreeroute",treeRoute);
 
-A slightly more complex example would be,
 
- 
 You can also build the trees in a way that is similar to regular routes.  e.g.
 
             var route = new TreeRoute("games");
@@ -28,6 +29,8 @@ You can also build the trees in a way that is similar to regular routes.  e.g.
             route.AddWithPath("{gametitle}/Resources/{resourcetype}/{resourceid}", r => r.To<ResourceController>());
             route.AddWithPath("{gametitle}/{gameid}/Chat/{chatid}", r => r.To<ChatController>()); 
             route.AddWithPath("{gametitle}/{gameid}/State/{stateid}", r => r.To<StateController>());
+
+Behind the scenes we do actually build a tree of TreeRoutes based on the paths provided.
 
 One advantage of building a tree of routes is that for large and deep trees, the performance of route resolution should be significantly better.  Also, future versions will allow attaching message handlers to the tree and routing resolution will generate a custom pipeline of message handlers that are specific to that route.
 
