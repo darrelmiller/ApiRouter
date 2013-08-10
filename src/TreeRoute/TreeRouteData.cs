@@ -51,7 +51,11 @@ namespace Tavis
         {
             get
             {
-                return _Segments[_Position].Replace("/", "");
+                if (_Position < _Segments.Length)
+                {
+                    return _Segments[_Position].Replace("/", "");
+                }
+                return null;
             }
         }
 
