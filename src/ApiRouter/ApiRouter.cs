@@ -42,7 +42,13 @@ namespace Tavis
         }
 
         public ApiRouter(string segmentTemplate) 
-        {
+        {            
+            if (segmentTemplate.StartsWith("~"))
+            {
+                var segments = segmentTemplate.Split('/');
+                _InitalPosition = segments.Length - 1;
+                segmentTemplate = String.Join("", segments, 1, segments.Length - 1);
+            }
             _segmentTemplate = segmentTemplate;
             _MatchPattern = CreateMatchPattern(segmentTemplate);
             
