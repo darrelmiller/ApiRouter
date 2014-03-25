@@ -274,12 +274,23 @@ namespace TreeRoutingTests
                 var mvcroute = routes.GetRouteData(httpRequestMessage);
             }
             stopwatch.Stop();
-            Debug.WriteLine("That took " + stopwatch.ElapsedMilliseconds);
-            
-            
+            Debug.WriteLine("That took " + stopwatch.ElapsedMilliseconds);                       
         }
 
+        [Fact]
+        public void RequestToRootWillPassThrough()
+        {
+            var router = new TreeRoute("api").To<FakeController>();
+            
+            var httpRequestMessage = new HttpRequestMessage()
+                {
+                    RequestUri = new Uri("http://localhost:2112/")
+                };
 
+            var routeData = router.GetRouteData("/", httpRequestMessage);
+
+            Assert.Null(routeData);
+        }
     }
 
     public class SetupController : ApiController { }
