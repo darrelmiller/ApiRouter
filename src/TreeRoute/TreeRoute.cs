@@ -30,6 +30,10 @@ namespace Tavis
 
         public TreeRoute(string segmentTemplate, params TreeRoute[] childroutes)
         {
+            Defaults = new Dictionary<string, object>();
+            Constraints = new Dictionary<string, object>();
+            DataTokens = new Dictionary<string, object>();
+
             _segmentTemplate = segmentTemplate;
             UseRegex = _segmentTemplate.Contains("{");
 
@@ -126,6 +130,8 @@ namespace Tavis
             if (treeRouteData == null)
             {
                 treeRouteData = new TreeRouteData(request.RequestUri, _InitalPosition);
+                
+
                 if (SegmentTemplate == string.Empty)
                 {
                     if (treeRouteData.AtRoot())
@@ -138,6 +144,8 @@ namespace Tavis
                     if (!Matches(request, treeRouteData.CurrentSegment)) return null; // URI segment does not match this TreeRoute
                 }
             }
+
+          
 
             ProcessTreeRoute(treeRouteData);
 
@@ -174,6 +182,11 @@ namespace Tavis
         private void ProcessTreeRoute(TreeRouteData treeRouteData)
         {
             if (_MessageHandler != null) treeRouteData.MessageHandlers.Add(_MessageHandler);
+
+            foreach (var value in Defaults)
+            {
+                treeRouteData.Values[value.Key] = value.Value;
+            }
 
             // Parse Parameters from URL and add them to the treeRouteData
             if (UseRegex)

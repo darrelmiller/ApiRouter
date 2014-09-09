@@ -62,4 +62,27 @@ namespace TreeRoutingTests
 
         
     }
+
+    public class ActionApiController : ApiController
+    {
+
+        [ActionName("A")]
+        public HttpResponseMessage GetA(HttpRequestMessage request)
+        {
+            return new HttpResponseMessage() { Content = new StringContent("A") };
+        }
+
+        [ActionName("B")]
+        public HttpResponseMessage GetB(HttpRequestMessage request)
+        {
+            return new HttpResponseMessage() { Content = new StringContent("B") };
+        }
+
+        [ActionName("C")]
+        public HttpResponseMessage GetC(HttpRequestMessage request)
+        {
+            return new HttpResponseMessage() { Content = new StringContent("C") };
+        }
+
+    }
 }

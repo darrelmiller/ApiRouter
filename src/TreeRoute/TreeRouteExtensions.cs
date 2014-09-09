@@ -10,6 +10,17 @@ namespace Tavis
         public static class TreeRouteExtensions
         {
 
+            public static TreeRoute Configure(this TreeRoute router, Action<TreeRoute> configureAction)
+            {
+                configureAction(router);
+                return router;
+            }
+
+            public static TreeRoute ToAction(this TreeRoute router, string actionName)
+            {
+                router.Defaults.Add("action",actionName);
+                return router;
+            }
             public static TreeRoute AddWithPath(this TreeRoute router, string path, Action<TreeRoute> configure)
             {
 

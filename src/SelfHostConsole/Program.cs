@@ -33,6 +33,8 @@ namespace RoutingMessageHandlerConsole
             route.AddWithPath("home", r => r.To<HomeController>());
             route.AddWithPath("contact/{id}",r => r.To<ContactController>());
             route.AddWithPath("contact/{id}/adddress/{addressid}", r => r.To<ContactAddressController>());
+            route.AddWithPath("act/A", r => r.To<ActionController>().ToAction("A"));
+            route.AddWithPath("act/B", r => r.To<ActionController>().ToAction("B"));
 
             config.Routes.Add("default", route);
 

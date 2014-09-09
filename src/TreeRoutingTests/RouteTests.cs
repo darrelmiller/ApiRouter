@@ -41,6 +41,18 @@ namespace TreeRoutingTests
         }
 
 
+        [Fact]
+        public void TreeRoutesWithActions()
+        {
+            var treeRoute = new TreeRoute("",
+                                     new TreeRoute("A").Configure(r => r.Defaults.Add("action","A")).To<ActionApiController>());
+
+
+            var routeData = treeRoute.GetRouteData("", new HttpRequestMessage() { RequestUri = new Uri("http://example.org/A") });
+            Assert.Equal("ActionApi", routeData.Values["controller"]);
+            Assert.Equal("A", routeData.Values["action"]);
+
+        }
 
         [Fact]
         public void RouteWithinLargeStaticPathUsingTreeAndLinqStyleInit()
