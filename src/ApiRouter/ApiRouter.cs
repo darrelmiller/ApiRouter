@@ -42,7 +42,13 @@ namespace Tavis
         }
 
         public ApiRouter(string segmentTemplate) 
-        {
+        {            
+            if (segmentTemplate.StartsWith("~"))
+            {
+                var segments = segmentTemplate.Split('/');
+                _InitalPosition = segments.Length - 1;
+                segmentTemplate = String.Join("", segments, 1, segments.Length - 1);
+            }
             _segmentTemplate = segmentTemplate;
             _MatchPattern = CreateMatchPattern(segmentTemplate);
             
@@ -59,7 +65,7 @@ namespace Tavis
         private static Regex CreateMatchPattern(string segmentTemplate)
         {
             var pattern = new StringBuilder();
-
+            pattern.Append("^");
             StringBuilder paramName = null;
             foreach (char tcharacter in segmentTemplate)
             {
@@ -87,6 +93,7 @@ namespace Tavis
                     paramName = null;
                 }
             }
+            pattern.Append("$");
             return new Regex(pattern.ToString(), RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
 
@@ -148,11 +155,11 @@ namespace Tavis
                 pathRouteData = RetrieveRouteData(request);
 
                 // Parse Parameters from URL and add them to the PathRouteData
-                var result = _MatchPattern.Match(pathRouteData.CurrentSegment);
+                var result = MatchPattern.Match(pathRouteData.CurrentSegment);
 
                 for (int i = 1; i < result.Groups.Count; i++)
                 {
-                    var name = _MatchPattern.GroupNameFromNumber(i);
+                    var name = MatchPattern.GroupNameFromNumber(i);
                     var value = result.Groups[i].Value;
                     pathRouteData.SetParameter(name, value);
                 }
@@ -172,7 +179,7 @@ namespace Tavis
 
             if (pathRouteData.EndOfPath())
             {
-                if (_HasController)
+                if (HasController)
                 {
                     return Dispatch(request, cancellationToken);
                 }
@@ -216,7 +223,7 @@ namespace Tavis
            
         }
 
-        private PathRouteData RetrieveRouteData(HttpRequestMessage request)
+        internal PathRouteData RetrieveRouteData(HttpRequestMessage request)
         {
             PathRouteData pathRouteData;
 
@@ -229,7 +236,7 @@ namespace Tavis
 
                 if (pathRouteData == null)
                 {
-                    pathRouteData = new PathRouteData(request.RequestUri, _InitalPosition);
+                    pathRouteData = CreatePathRouteDate(request);
 
                     // Do we need to copy over the properties???
                     foreach (var value in currentRouteData.Values)
@@ -260,6 +267,11 @@ namespace Tavis
             return pathRouteData;
         }
 
+        internal PathRouteData CreatePathRouteDate(HttpRequestMessage request)
+        {
+            return new PathRouteData(request.RequestUri, _InitalPosition);;
+        }
+
         private IHttpRouteData GetRouteData(HttpRequestMessage request)
         {
             return (IHttpRouteData)request.Properties[HttpPropertyKeys.HttpRouteDataKey];
@@ -267,7 +279,7 @@ namespace Tavis
 
         public bool Matches(HttpRequestMessage request, string paramTemplate)
         {
-            var result = _MatchPattern.Match(paramTemplate);
+            var result = MatchPattern.Match(paramTemplate);
             if (!result.Success)
                 return false;
 
@@ -275,7 +287,7 @@ namespace Tavis
             var parameterValues = new Dictionary<string, object>();
             for (int i = 1; i < result.Groups.Count; i++)
             {
-                var name = _MatchPattern.GroupNameFromNumber(i);
+                var name = MatchPattern.GroupNameFromNumber(i);
                 var value = result.Groups[i].Value;
                 parameterValues.Add(name, value);
             }
@@ -292,28 +304,24 @@ namespace Tavis
             return true;
             
         }
-     
 
-        private Task<HttpResponseMessage> Dispatch(HttpRequestMessage request, CancellationToken cancellationToken)
+
+        internal Task<HttpResponseMessage> Dispatch(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             HttpConfiguration configuration = GetConfiguration(request);
 
-            var controllerDescriptor = new HttpControllerDescriptor(configuration, _ControllerType.Name, _ControllerType);
+            var controllerDescriptor = new HttpControllerDescriptor(configuration, ControllerType.Name, ControllerType);
+
+
+            IHttpControllerActivator activator = configuration.Services.GetHttpControllerActivator();
+            var httpController = activator.Create(request, controllerDescriptor, ControllerType);
 
             var controllerContext = new HttpControllerContext(configuration, GetRouteData(request), request);
             controllerContext.ControllerDescriptor = controllerDescriptor;
-
-            IHttpControllerActivator activator = GetActivator(configuration);
-            var httpController = activator.Create(controllerContext, _ControllerType);
             controllerContext.Controller = httpController;
 
             return httpController.ExecuteAsync(controllerContext, cancellationToken);
 
-        }
-
-        private IHttpControllerActivator GetActivator(HttpConfiguration configuration)
-        {
-            return (IHttpControllerActivator)configuration.ServiceResolver.GetService(typeof (IHttpControllerActivator));
         }
 
         private HttpConfiguration GetConfiguration(HttpRequestMessage request)
@@ -329,11 +337,15 @@ namespace Tavis
             return configuration;
         }
 
+        public ApiRouter To<T>(string instance = null) {
+            To(typeof (T), instance);
+            return this;
+        }
 
-        public ApiRouter To<T>(string instance = null)
+        internal ApiRouter To(Type type,string instance = null)
         {
             _ControllerInstanceName = instance;
-            _ControllerType = typeof(T);
+            _ControllerType = type;
             _HasController = true;
             return this;
         }
@@ -394,7 +406,7 @@ namespace Tavis
         public ApiRouter FindControllerRouter(Type type, string instance = null)
         {
 
-            if (_HasController && _ControllerType == type && _ControllerInstanceName == instance) return this;
+            if (HasController && ControllerType == type && _ControllerInstanceName == instance) return this;
 
             foreach (var childRouter in ChildRouters.Values)
             {
@@ -407,8 +419,8 @@ namespace Tavis
         IHttpRouteData IHttpRoute.GetRouteData(string virtualPathRoot, HttpRequestMessage request) {
             throw new NotImplementedException();        
         }
-
-        IHttpVirtualPathData IHttpRoute.GetVirtualPath(HttpControllerContext controllerContext, IDictionary<string, object> values) {
+        
+        IHttpVirtualPathData IHttpRoute.GetVirtualPath(HttpRequestMessage requestMessage, IDictionary<string, object> values) {
             return new HttpVirtualPathData(this, GetUrlFromRouter(this).OriginalString);
         }
 
@@ -427,6 +439,8 @@ namespace Tavis
         IDictionary<string, object> IHttpRoute.DataTokens {
             get { throw new NotImplementedException(); }
         }
+
+        public HttpMessageHandler Handler { get { return this; } }  // Not sure if this is correct.
 
         public Link GetLink<TLink>(HttpRequestMessage requestMessage)
         {
@@ -457,6 +471,21 @@ namespace Tavis
                 }
                 return target;
             }
+        }
+
+        internal Regex MatchPattern
+        {
+            get { return _MatchPattern; }
+        }
+
+        internal bool HasController
+        {
+            get { return _HasController; }
+        }
+
+        internal Type ControllerType
+        {
+            get { return _ControllerType; }
         }
     }
 

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Tavis.ApiRouter</id>
+    <version>0.1.9</version>
+    <authors>Darrel Miller</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <title>Hierarchial Web API routing</title>
+	<description>This is a replacement for the MVC routing that is used by default in Web API.  This routing mechanism matches against a tree of routers, one segment at a time.  Message Handlers can be attached to any node in the tree.  This makes it easier to create nested areas and sub-controllers.</description>
+<releaseNotes>Added ToAction action mapping</releaseNotes>
+
+	<projectUrl>https://github.com/tavis-software/ApiRouter</projectUrl>
+ 	<dependencies>
+	<dependency id="Tavis.Link" version="0.1.9" />
+	<dependency id="Microsoft.AspNet.WebApi.Client" version="4.0.20710.0" />
+        <dependency id="Microsoft.AspNet.WebApi.Core" version="4.0.20710.0" />
+        <dependency id="Microsoft.Net.Http" version="2.0.20710.0" />
+        <dependency id="Newtonsoft.Json" version="4.5.8" />
+        <dependency id="Tavis.UriTemplates" version="0.1.1" />
+	</dependencies>
+	 </metadata>
+  <files>
+    <file src="..\src\ApiRouter\bin\Release\Tavis.ApiRouter.dll" target="lib\net40" />
+    <file src="..\src\ApiRouter\bin\Release\Tavis.TreeRoute.dll" target="lib\net40" />
+  </files>
+</package>

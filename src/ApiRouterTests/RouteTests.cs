@@ -19,7 +19,7 @@ namespace ApiRouterTests
         {
             var root = new ApiRouter("").To<FakeController>(new { ControllerId = "Root" });
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost").Result;
 
@@ -27,13 +27,16 @@ namespace ApiRouterTests
             Assert.Equal("Root", FakeController.ControllerId);
         }
 
+
+      
+
         [Fact]
         public void RouteStaticPath()
         {
             var root = new ApiRouter("")
                         .Add(new ApiRouter("Desktop").To<FakeController>(new { ControllerId = "Desktop" }));
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/Desktop").Result;
 
@@ -51,7 +54,7 @@ namespace ApiRouterTests
                                 .Add(new ApiRouter("Hotfixes").To<FakeController>(new { ControllerId = "Hotfixes" })))
                         .Add(new ApiRouter("Desktop").To<FakeController>(new { ControllerId = "Desktop" }));
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/Admin/Hotfixes").Result;
 
@@ -60,6 +63,9 @@ namespace ApiRouterTests
             Assert.Equal("Hotfixes", FakeController.ControllerId);
         }
 
+     
+
+
         [Fact]
         public void RouteWithParameterSegement()
         {
@@ -67,7 +73,7 @@ namespace ApiRouterTests
                         .Add(new ApiRouter("Contact")
                                 .Add(new ApiRouter("{id}").To<FakeController>(new { ControllerId = "Contact" })));
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/Contact/23").Result;
 
@@ -75,6 +81,8 @@ namespace ApiRouterTests
             Assert.Equal("23", pathparser.GetParameter("id"));
             Assert.Equal("Contact", FakeController.ControllerId);
         }
+
+    
 
 
         [Fact]
@@ -84,7 +92,7 @@ namespace ApiRouterTests
 
             var root = new ApiRouter("").WithHandler(fakeHandler).To<FakeController>();
 
-            var httpClient = new HttpClient(root);
+            var httpClient = new HttpClient(new FakeServer(root));
 
             var response = httpClient.GetAsync("http://localhost/").Result;
 
@@ -127,6 +135,60 @@ namespace ApiRouterTests
             Assert.True(pathParser.EndOfPath());
         }
 
+        [Fact]
+        public void CanFindApiRouteBeforeStandardRoute()
+        {
+            var config = new HttpConfiguration();
+
+            config.Routes.MapHttpRoute(
+                name: "TreeApi",
+                routeTemplate: "tree/{*path}",
+                defaults: new { ControllerId = "CanFindApiRouteBeforeStandardRoute" },
+                constraints: null,
+                handler: new ApiRouter("~/tree").To<FakeController>());
+
+            config.Routes.MapHttpRoute(
+                            name: "DefaultApi",
+                            routeTemplate: "api/{controller}/{id}",
+                            defaults: new { id = RouteParameter.Optional }
+                        );
+
+            var server = new HttpServer(config);
+            var client = new HttpClient(server);
+            var response = client.GetAsync("http://localhost:64921/tree").Result;
+
+            Assert.NotNull(response);
+            Assert.Equal("CanFindApiRouteBeforeStandardRoute", FakeController.ControllerId);
+        }
+
+        [Fact]
+        public void CanFindStandardRouteAfterApiRoute()
+        {
+            var config = new HttpConfiguration();            
+
+            config.Routes.MapHttpRoute(
+                name: "TreeApi",
+                routeTemplate: "api/tree/{*path}",
+                defaults: null,
+                constraints: null,
+                handler: new ApiRouter("tree").To<FakeController>());
+
+            config.Routes.MapHttpRoute(
+                            name: "DefaultApi",
+                            routeTemplate: "api/{controller}/{id}",
+                            defaults: new { 
+                                id = RouteParameter.Optional, 
+                                ControllerId = "CanFindStandardRouteAfterApiRoute" 
+                            }
+                        );            
+
+            var server = new HttpServer(config);
+            var client = new HttpClient(server);
+            var response = client.GetAsync("http://localhost/api/fake").Result;
+
+            Assert.NotNull(response);
+            Assert.Equal("CanFindStandardRouteAfterApiRoute", FakeController.ControllerId);           
+        }
 
         internal class FakeHandler : DelegatingHandler
         {

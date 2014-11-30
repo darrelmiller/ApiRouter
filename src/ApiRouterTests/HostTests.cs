@@ -4,6 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web.Http;
+using System.Web.Http.Dispatcher;
+using System.Web.Http.Hosting;
 using Tavis;
 using Xunit;
 
@@ -32,11 +34,28 @@ namespace ApiRouterTests
 
 
         [Fact]
+        public void gamesRoutes2()
+        {
+            var router = new ApiRouter("games", new Uri("http://localhost/"));
+            router.AddWithPath("{gametitle}/Setup/{gamesid}", apiRouter => apiRouter.To<SetupController>());
+            router.AddWithPath("{gametitle}/Resources/{resourcetype}/{resourceid}", apiRouter => apiRouter.To<ResourceController>());
+            router.AddWithPath("{gametitle}/{gameid}/Chat/{chatid}", apiRouter => apiRouter.To<ChatController>());
+            router.AddWithPath("{gametitle}/{gameid}/State/{stateid}", apiRouter => apiRouter.To<StateController>());
+
+            var url = router.GetUrlForController(typeof(ChatController));
+
+            Assert.Equal("http://localhost/games/{gametitle}/{gameid}/Chat/{chatid}", url.OriginalString);
+        }
+
+
+
+
+        [Fact]
         public void GraftRouterAtSubTree()
         {
             var router = new ApiRouter("foo", new Uri("http://localhost/blah/")).To<FakeController>();
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/blah/foo").Result;
 
@@ -48,7 +67,7 @@ namespace ApiRouterTests
         {
             var router = new ApiRouter("", new Uri("http://localhost/")).To<FakeController>();
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/").Result;
 
@@ -60,7 +79,7 @@ namespace ApiRouterTests
         {
             var router = new ApiRouter("", new Uri("http://localhost/api/")).To<FakeController>();
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/api").Result;
 
@@ -68,12 +87,43 @@ namespace ApiRouterTests
         }
 
 
+        [Fact]
+        public void BuildTreeFromPath() {
+            var router = new ApiRouter("", new Uri("http://localhost/"));
+
+            router.AddWithPath("foo/bar/baz", (r) => r.To<FakeController>() );
+
+            var httpClient = new HttpClient(new FakeServer(router));
+
+            var response = httpClient.GetAsync("http://localhost/foo/bar/baz").Result;
+
+            Assert.True(FakeController.WasInstantiated);
+        }
 
 
-        public class SetupController : ApiController { }
+
+
+
+        public class SetupController : FakeController { }
         public class ResourceController : ApiController { }
         public class ChatController : ApiController { }
         public class StateController : ApiController { }
 
+    }
+
+    public class FakeServer : DelegatingHandler
+    {
+        public FakeServer(ApiRouter router)
+        {
+            InnerHandler = router;
+
+        }
+        protected override System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        {
+            var httpConfiguration = new HttpConfiguration();
+         //   httpConfiguration.Services.Add(typeof(IHttpControllerActivator), new TestControllerActivator());
+            request.Properties[HttpPropertyKeys.HttpConfigurationKey] = httpConfiguration;
+            return base.SendAsync(request, cancellationToken);
+        }
     }
 }

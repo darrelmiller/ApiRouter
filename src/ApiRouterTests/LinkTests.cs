@@ -76,7 +76,7 @@ namespace ApiRouterTests
                                     )
                                 );
 
-            var httpClient = new HttpClient(router);
+            var httpClient = new HttpClient(new FakeServer(router));
 
             var response = httpClient.GetAsync("http://localhost/Customer/23/").Result;
 
@@ -96,10 +96,10 @@ namespace ApiRouterTests
         public HttpResponseMessage Get ()
         {
             var router = Request.GetRouteData().Route as ApiRouter;
-            var url = router.GetLink<InvoicesLink>(Request).CreateRequest().RequestUri.AbsoluteUri; //Need to add the ability to resolve templates for serialization.
+            var url = router.GetLink<InvoicesLink>(Request).GetResolvedTarget(); //Need to add the ability to resolve templates for serialization.
             return new HttpResponseMessage()
                        {
-                           Content = new StringContent(url)
+                           Content = new StringContent(url.AbsoluteUri)
                        };
         }
     }

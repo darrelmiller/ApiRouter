@@ -37,3 +37,4 @@ Download/
 *.pidb
 *.userprefs
 packages
+*.nupkg
